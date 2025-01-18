@@ -1,0 +1,108 @@
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local sizeIncrement = 1
+local transparencyState = 1  -- Default transparency is 1 (opaque)
+local hitboxSize = 10  -- Starting size of the hitbox
+
+-- Flags to track if the M, N, or Z key was pressed
+local mKeyPressed = false
+local nKeyPressed = false
+local zKeyPressed = false
+
+-- Listen for key presses (M, N, Z)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end  -- Ignore inputs if the game has already processed them
+    
+    if input.KeyCode == Enum.KeyCode.M and not mKeyPressed then
+        -- Prevent multiple notifications for a single M key press
+        mKeyPressed = true
+        
+        -- Increase the size of the HumanoidRootPart when M is pressed
+        hitboxSize = hitboxSize + sizeIncrement
+        
+        -- Loop through all players' characters, but exclude the local player
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                -- Set the new size of the HumanoidRootPart
+                v.Character.HumanoidRootPart.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+            end
+        end
+
+        -- Send notification for hitbox size change
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Hitbox Size Increased",
+            Text = "Hitbox size is now: " .. hitboxSize,
+            Duration = 2
+        })
+    elseif input.KeyCode == Enum.KeyCode.N and not nKeyPressed then
+        -- Prevent multiple notifications for a single N key press
+        nKeyPressed = true
+        
+        -- Decrease the size of the HumanoidRootPart when N is pressed
+        if hitboxSize > sizeIncrement then  -- Ensure it doesn't go below the starting size
+            hitboxSize = hitboxSize - sizeIncrement
+        end
+        
+        -- Loop through all players' characters, but exclude the local player
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                -- Set the new size of the HumanoidRootPart
+                v.Character.HumanoidRootPart.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+            end
+        end
+
+        -- Send notification for hitbox size decrease
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Hitbox Size Decreased",
+            Text = "Hitbox size is now: " .. hitboxSize,
+            Duration = 2
+        })
+    elseif input.KeyCode == Enum.KeyCode.Z and not zKeyPressed then
+        -- Prevent multiple notifications for a single Z key press
+        zKeyPressed = true
+        
+        -- Toggle transparency between 0.8 and 1 when Z is pressed
+        transparencyState = (transparencyState == 1) and 0.8 or 1
+        
+        -- Loop through all players' characters, but exclude the local player
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                -- Set the new transparency of the HumanoidRootPart
+                v.Character.HumanoidRootPart.Transparency = transparencyState
+            end
+        end
+        
+        -- Send notification for transparency change
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Hitbox Transparency Changed",
+            Text = "Hitbox transparency is now: " .. transparencyState,
+            Duration = 2
+        })
+    end
+end)
+
+-- Reset the flags after key is released
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.M then
+        mKeyPressed = false  -- Allow M to be pressed again
+    elseif input.KeyCode == Enum.KeyCode.N then
+        nKeyPressed = false  -- Allow N to be pressed again
+    elseif input.KeyCode == Enum.KeyCode.Z then
+        zKeyPressed = false  -- Allow Z to be pressed again
+    end
+end)
+
+-- Update loop to apply size and transparency continuously
+RunService.RenderStepped:Connect(function()
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoidRootPart = v.Character.HumanoidRootPart
+
+            -- Continuously apply the size and transparency to the HumanoidRootPart
+            humanoidRootPart.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+            humanoidRootPart.Transparency = transparencyState
+        end
+    end
+end)
